@@ -1,0 +1,5 @@
+{"type":"run","date":"2026-09-22","passed":7,"failed":0,"unverified":0,"failed_checks":[],"note":"3 relances J+7 préparées, aucune correction"}
+{"type":"run","date":"2026-09-29","passed":6,"failed":1,"unverified":0,"failed_checks":["Palier correspond à l'ancienneté"],"note":"J+30 appliqué à 28 jours de retard, règle de décision précisée"}
+{"type":"run","date":"2026-10-06","passed":7,"failed":0,"unverified":0,"failed_checks":[],"note":"relance J+30 Atelier Lune approuvée"}
+{"type":"run","date":"2026-10-13","passed":6,"failed":1,"unverified":0,"failed_checks":["Aucune formule interdite"],"note":"mot urgent dans un J+60, check renforcé"}
+{"type":"run","date":"2026-10-20","passed":7,"failed":0,"unverified":0,"failed_checks":[],"note":"2 relances J+7 et 1 J+60 préparées"}

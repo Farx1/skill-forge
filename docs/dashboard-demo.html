@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard playbook-forge</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#1d2330;--card:#fff;--mut:#667085;--bd:#d9dde5;--ok:#1a7f4b;--mid:#b26a00;--ko:#c0392b;--acc:#2f5fd0}
+@media (prefers-color-scheme:dark){:root{--bg:#12151c;--fg:#e6e9f0;--card:#1b202b;--mut:#9aa3b5;--bd:#2c3342;--ok:#4cc38a;--mid:#e0a040;--ko:#ef6f60;--acc:#7ea2ff}}
+*{box-sizing:border-box}
+body{margin:0;padding:1rem;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:1.4rem;margin:.2rem 0 1rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:.7rem}
+.stat b{display:block;font-size:1.6rem}
+.stat span,.muted{color:var(--mut);font-size:.85rem}
+.bar{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin-bottom:1rem}
+input[type=search]{flex:1;min-width:200px;padding:.5rem .7rem;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.9rem;align-items:start}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:.9rem;cursor:pointer}
+.card.warn{border-left:4px solid var(--ko)}
+.card:focus-visible{outline:2px solid var(--acc)}
+.card h2{font-size:1.1rem;margin:0 0 .4rem;display:flex;justify-content:space-between;gap:.5rem}
+.badge{font-size:.75rem;border:1px solid var(--bd);border-radius:99px;padding:0 .5rem;color:var(--mut);align-self:center}
+.layers{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0}
+.l{font-size:.8rem;border-radius:6px;padding:.1rem .45rem;border:1px solid currentColor}
+.l-fait{color:var(--ok)}.l-partiel{color:var(--mid)}.l-à{color:var(--ko)}
+svg{width:100%;height:36px;display:block;margin:.4rem 0}
+polyline{fill:none;stroke:var(--acc);stroke-width:2;vector-effect:non-scaling-stroke}
+ul{margin:.3rem 0;padding-left:1.1rem}
+.al{color:var(--ko)}
+.detail{margin-top:.7rem;border-top:1px solid var(--bd);padding-top:.7rem;cursor:auto}
+.detail h3{font-size:.95rem;margin:.6rem 0 .2rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:left;padding:.25rem .3rem;border-bottom:1px solid var(--bd);word-break:break-word}
+footer{margin-top:1.5rem}
+</style>
+</head>
+<body>
+<h1>Dashboard des playbooks</h1>
+<section class="stats" id="stats"></section>
+<div class="bar">
+<input type="search" id="q" placeholder="Rechercher un playbook" aria-label="Rechercher un playbook">
+<label><input type="checkbox" id="onlyAl"> Avec alertes</label>
+</div>
+<main class="grid" id="grid"></main>
+<footer class="muted" id="foot"></footer>
+<script type="application/json" id="data">{"generated": "2026-10-29", "playbooks": [{"name": "relance-factures", "scope": "extra", "path": "E:\\claude-projects\\playbook-forge\\examples\\relance-factures", "layers": {"Étapes": "fait", "Outils": "fait", "Checks": "fait"}, "last_run": "2026-10-20", "spark": [1.0, 0.86, 1.0, 0.86, 1.0], "notes_count": 2, "alerts": ["audit dû : dernier repère 2026-09-15 (44 jours)"], "index": [["echelle-relance.md", "paliers J+7, J+30, J+60 et gabarits d'email", "2026-09-15"], ["contacts-clients.md", "adresse, prénom et registre de chaque client", "2026-09-15"], ["regles-ton.md", "formules autorisées et interdites par palier", "2026-09-15"]], "notes": [{"date": "2026-10-13", "layer": "checks", "error": "un brouillon J+60 contenait « urgent » sans que rien ne l'attrape", "fix": "ajout du check « Aucune formule interdite » avec recherche des formules de regles-ton.md"}, {"date": "2026-09-29", "layer": "instructions", "error": "palier J+30 appliqué à une facture à 28 jours de retard", "fix": "précision dans Décisions : J+7 pour 7 à 29 jours, J+30 pour 30 à 59 jours"}], "top_failing": [["Palier correspond à l'ancienneté", 1], ["Aucune formule interdite", 1]]}], "stats": {"playbooks": 1, "runs30": 4, "rate": 93, "alerts": 1}}</script>
+<script>
+(function(){
+var D=JSON.parse(document.getElementById('data').textContent);
+var NS='http://www.w3.org/2000/svg';
+function h(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function spark(v){
+ if(!v.length)return h('div','muted','Aucun run enregistré');
+ if(v.length<2)v=[v[0],v[0]];
+ var s=document.createElementNS(NS,'svg'),p=document.createElementNS(NS,'polyline');
+ s.setAttribute('viewBox','0 0 100 24');s.setAttribute('preserveAspectRatio','none');
+ s.setAttribute('role','img');s.setAttribute('aria-label','Taux de réussite sur les derniers runs');
+ p.setAttribute('points',v.map(function(r,i){return (i*100/(v.length-1))+','+(22-r*20)}).join(' '));
+ s.appendChild(p);return s}
+function list(items,empty){
+ if(!items.length)return h('div','muted',empty);
+ var u=h('ul');items.forEach(function(t){u.appendChild(h('li',null,t))});return u}
+function detail(p){
+ var d=h('div','detail');d.hidden=true;
+ d.appendChild(h('h3',null,'Fichiers (INDEX.md)'));
+ if(p.index.length){var t=h('table'),r=h('tr');['Fichier','Usage','Date'].forEach(function(x){r.appendChild(h('th',null,x))});t.appendChild(r);
+  p.index.forEach(function(row){var tr=h('tr');row.forEach(function(x){tr.appendChild(h('td',null,x))});t.appendChild(tr)});d.appendChild(t)}
+ else d.appendChild(h('div','muted','Aucun fichier indexé'));
+ d.appendChild(h('h3',null,'5 dernières corrections'));
+ d.appendChild(list(p.notes.map(function(n){return n.date+' | '+n.layer+' | '+n.error+' -> '+n.fix}),'Aucune correction'));
+ d.appendChild(h('h3',null,'Checks les plus en échec'));
+ d.appendChild(list(p.top_failing.map(function(c){return c[0]+' ('+c[1]+' fois)'}),'Aucun check en échec'));
+ d.appendChild(h('div','muted',p.path));
+ return d}
+function card(p){
+ var c=h('div','card'+(p.alerts.length?' warn':''));
+ c.tabIndex=0;c.setAttribute('role','button');c.setAttribute('aria-expanded','false');
+ var t=h('h2',null,p.name);t.appendChild(h('span','badge',p.scope));c.appendChild(t);
+ var ly=h('div','layers');
+ Object.keys(p.layers).forEach(function(k){var v=p.layers[k];ly.appendChild(h('span','l l-'+v.split(' ')[0],k+' : '+v))});
+ c.appendChild(ly);
+ c.appendChild(h('div','muted','Dernier run : '+(p.last_run||'aucun')+' | Corrections : '+p.notes_count));
+ c.appendChild(spark(p.spark));
+ var a=list(p.alerts,'Aucune alerte');if(p.alerts.length)a.className='al';c.appendChild(a);
+ var d=detail(p);c.appendChild(d);
+ function tog(e){if(e.target.closest&&e.target.closest('.detail'))return;d.hidden=!d.hidden;c.setAttribute('aria-expanded',String(!d.hidden))}
+ c.addEventListener('click',tog);
+ c.addEventListener('keydown',function(e){if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();tog(e)}});
+ return c}
+function stats(){
+ var s=D.stats,el=document.getElementById('stats');
+ [['Playbooks',s.playbooks],['Runs sur 30 jours',s.runs30],['Checks réussis',s.rate===null?'n/a':s.rate+' %'],['Alertes',s.alerts]].forEach(function(x){
+  var b=h('div','stat');b.appendChild(h('b',null,String(x[1])));b.appendChild(h('span',null,x[0]));el.appendChild(b)})}
+function render(){
+ var q=document.getElementById('q').value.toLowerCase(),only=document.getElementById('onlyAl').checked,g=document.getElementById('grid');
+ g.textContent='';
+ var n=0;
+ D.playbooks.forEach(function(p){
+  if(only&&!p.alerts.length)return;
+  if(q&&(p.name+' '+p.scope).toLowerCase().indexOf(q)<0)return;
+  g.appendChild(card(p));n++});
+ if(!n)g.appendChild(h('div','muted','Aucun playbook ne correspond.'))}
+stats();render();
+document.getElementById('q').addEventListener('input',render);
+document.getElementById('onlyAl').addEventListener('change',render);
+document.getElementById('foot').textContent='Généré le '+D.generated+' par playbook-forge';
+})();
+</script>
+</body>
+</html>

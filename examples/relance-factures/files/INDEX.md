@@ -1,0 +1,3 @@
+- echelle-relance.md | paliers J+7, J+30, J+60 et gabarits d'email | 2026-09-15
+- contacts-clients.md | adresse, prénom et registre de chaque client | 2026-09-15
+- regles-ton.md | formules autorisées et interdites par palier | 2026-09-15
