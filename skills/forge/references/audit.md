@@ -9,11 +9,12 @@ Lance `forge.py audit <nom>`, ou `forge.py audit --all` pour tous les skills (`-
 - doublons probables ;
 - erreurs répétées dans `notes.md` (même couche et texte proche, ou même numéro d'étape, 2 fois ou plus) ;
 - dernier audit vieux de plus de 30 jours ;
-- checks qui échouent dans plusieurs des 5 derniers runs.
+- checks qui échouent dans plusieurs des 5 derniers runs ;
+- skill jamais utilisé depuis 60 jours (journal `logs/skill-usage.tsv` du dossier de config présent, skill créé il y a plus de 60 jours, 0 usage sur 60 jours).
 
 ## 2. Une question par constat
 
-Pour chaque constat, pose une question AskUserQuestion : Supprimer / Garder / Fusionner, selon ce qui s'applique (fusionner n'existe que pour les doublons). Ne supprime jamais rien sans réponse : un fichier qui paraît mort peut servir à un cas rare. Après « Supprimer » ou « Fusionner », mets à jour `files/INDEX.md` et les étapes de `SKILL.md` qui le citaient, puis lance `forge.py validate <nom>`.
+Pour chaque constat, pose une question AskUserQuestion : Supprimer / Garder / Fusionner, selon ce qui s'applique (fusionner n'existe que pour les doublons et les skills jamais utilisés, à fusionner dans un skill voisin). Ne supprime jamais rien sans réponse : un fichier qui paraît mort peut servir à un cas rare. Après « Supprimer » ou « Fusionner », mets à jour `files/INDEX.md` et les étapes de `SKILL.md` qui le citaient, puis lance `forge.py validate <nom>`.
 
 ## 3. Erreurs répétées
 

@@ -1,6 +1,6 @@
 import json
 import os
-import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -193,17 +193,17 @@ class TestForge(Base):
         self.assertIn("check_echoue", kinds)
         self.assertIn("audit_du", kinds)
 
-    def test_dashboard_no_http_in_src_href(self):
-        d = self.make()
-        self.run_forge("note", str(d), "--layer", "outils", "--error", '<a href="http://x.test">piège</a>',
-                     "--fix", "ok", "--date", "2026-02-05")
-        out_file = self.tmp / "dash.html"
-        rc, out = self.run_forge("dashboard", "--no-open", "--out", str(out_file))
+    def test_status_json(self):
+        self.make()
+        rc, out = self.run_forge("status", "--json")
         self.assertEqual(rc, 0, out)
-        html = out_file.read_text(encoding="utf-8")
-        self.assertIsNone(re.search(r"""(src|href)\s*=\s*["']?http""", html))
-        self.assertNotIn('<a href="http', html)
-        self.assertIn("demo", html)
+        data = json.loads(out)
+        self.assertEqual(data["stats"]["skills"], 1)
+        sk = data["skills"][0]
+        self.assertEqual(sk["name"], "demo")
+        self.assertEqual(set(sk["layers"]), {"Étapes", "Outils", "Checks"})
+        self.assertIn("top_failing", sk)
+        self.assertNotIn("runs", sk)
 
     def test_export_contains_skill_under_name(self):
         d = self.make()
@@ -219,6 +219,46 @@ class TestForge(Base):
         d = self.make(skill=VALID.replace("metadata:", "model: x\nmetadata:", 1))
         self.assertEqual(self.run_forge("export", str(d), "--out", str(self.tmp / "o"))[0], 1)
 
+    def log(self, *lines):
+        (self.cfg / "logs").mkdir(parents=True, exist_ok=True)
+        (self.cfg / "logs" / "skill-usage.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def test_usage_counted_namespaced_and_absent(self):
+        d = self.make()
+        rc, out = self.run_forge("status", "--json")
+        self.assertIsNone(json.loads(out)["skills"][0]["uses_30d"])
+        from datetime import date
+        t = date.today().isoformat()
+        self.log(f"{t}\tdemo\t/x", f"{t}T10:00:00\tplug:demo\t/x", "2020-01-01\tdemo\t/x", "n'importe quoi", f"{t}\tautre\t/x")
+        rc, out = self.run_forge("status", "--json")
+        s = json.loads(out)["skills"][0]
+        self.assertEqual(s["uses_30d"], 2)
+        self.assertEqual(s["last_used"], t)
+
+    def test_audit_never_used(self):
+        d = self.make()
+        kinds = lambda: [f["kind"] for f in json.loads(self.run_forge("audit", str(d), "--json")[1])[0]["findings"]]
+        self.assertNotIn("jamais_utilise", kinds())
+        from datetime import date
+        self.log(f"{date.today().isoformat()}\tautre\t/x")
+        self.assertNotIn("jamais_utilise", kinds())  # journal récent : pas de couverture 60 jours, pas d'alerte
+        self.log("2020-01-01\tdemo\t/x")
+        self.assertIn("jamais_utilise", kinds())
+
+    def test_paths_warn_and_export_strips(self):
+        for fm in ('paths:\n  - "**/*.tsx"\n  - "*.sql"\n', 'paths: ["**/*.tsx", "*.sql"]\n'):
+            d = self.make(name="pth", skill=VALID.replace("metadata:", fm + "metadata:", 1))
+            rc, out = self.run_forge("validate", str(d))
+            self.assertEqual(rc, 0, out)
+            self.assertRegex(out, r"WARN.*paths")
+            outdir = self.tmp / "o"
+            self.assertEqual(self.run_forge("export", str(d), "--out", str(outdir))[0], 0)
+            sk = zipfile.ZipFile(outdir / "pth.zip").read("pth/SKILL.md").decode("utf-8")
+            self.assertNotIn("paths", sk)
+            self.assertNotIn("tsx", sk)
+            self.assertIn("skill-forge", sk)
+            shutil.rmtree(d)
+
     def test_accents_roundtrip(self):
         d = self.make()
         err = "Échec à l'étape été : œuf ç ñ"
@@ -226,9 +266,7 @@ class TestForge(Base):
         raw = (d / "notes.md").read_bytes()
         self.assertNotIn(b"\r\n", raw)
         self.assertIn(f"- 2026-02-05 | outils | {err} | corrigé".encode("utf-8"), raw)
-        out_file = self.tmp / "dash.html"
-        self.run_forge("dashboard", "--no-open", "--out", str(out_file))
-        self.assertIn(err, out_file.read_text(encoding="utf-8"))
+        self.assertIn(err, json.loads(self.run_forge("status", "--json")[1])["skills"][0]["notes"][0]["error"])
         rc, out = self.run_forge("validate", str(d), "--json")
         self.assertEqual(rc, 0, out)
 
@@ -242,15 +280,14 @@ class TestForge(Base):
         self.assertEqual(rc, 0, out)
         self.assertEqual(sorted(r["name"] for r in json.loads(out)), ["autre", "demo"])
 
-    def test_dashboard_survives_latin1_skill(self):
+    def test_status_survives_latin1_skill(self):
         d = self.make()
         (d / "SKILL.md").write_bytes(VALID.replace("@NAME@", "demo").encode("latin-1", "replace"))
         (d / "SKILL.md").write_bytes((d / "SKILL.md").read_bytes() + "é".encode("latin-1"))
-        out_file = self.tmp / "dash.html"
-        rc, out = self.run_forge("dashboard", "--no-open", "--out", str(out_file))
+        rc, out = self.run_forge("status", "--json")
         self.assertEqual(rc, 0, out)
         self.assertNotIn("Traceback", out)
-        self.assertIn("UTF-8", out_file.read_text(encoding="utf-8"))
+        self.assertIn("UTF-8", out)
         self.assertEqual(self.run_forge("validate", str(d))[0], 1)
 
     def test_citation_is_whole_word(self):

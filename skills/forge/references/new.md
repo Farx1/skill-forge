@@ -43,6 +43,18 @@ Règles de conduite :
 
 Quand les 9 sujets sont couverts, pose la fenêtre « Interview terminée ? » : Oui, écris le skill / Non, j'ai encore des choses à dire. N'écris aucun fichier avant « Oui » : un dossier créé trop tôt se remplit de réponses incomplètes.
 
+## 4 bis. Clé `paths` (optionnelle)
+
+Si le job concerne des types de fichiers précis (frontend, migrations SQL, etc.), propose la clé `paths` du frontmatter avec des globs, par exemple :
+
+```
+paths:
+  - "**/*.tsx"
+  - "migrations/*.sql"
+```
+
+Explique pourquoi : Claude Code ne charge alors le skill que lorsque des fichiers correspondants sont touchés. Le déclenchement automatique est ciblé et il y a moins de faux déclenchements. La clé n'existe pas sur claude.ai : `forge.py validate` la signale en WARN et `forge.py export` la retire du zip. Si le job ne vise aucun type de fichier, n'ajoute rien.
+
 ## 5. Écriture
 
 1. Lance `forge.py scaffold <nom> --scope perso|projet` (`--root CHEMIN` pour un autre emplacement). Il refuse si le dossier existe ou si le nom est invalide. S'il signale la création du dossier `skills` racine, note-le pour l'étape 7.
