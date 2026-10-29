@@ -10,7 +10,7 @@
       "name": "skill-forge",
       "source": "./",
       "description": "Transforme un job récurrent en skill Claude Code : étapes, outils, checks et boucle de correction.",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }

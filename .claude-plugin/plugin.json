@@ -1,7 +1,7 @@
 {
   "name": "skill-forge",
-  "version": "0.1.0",
-  "description": "Transforme un job récurrent en skill Claude Code : étapes, outils, checks et boucle de correction, avec dashboard local.",
+  "version": "0.2.0",
+  "description": "Transforme un job récurrent en skill Claude Code : étapes, outils, checks et boucle de correction, avec panneau Skills et détection des approches récurrentes.",
   "author": {
     "name": "Jules Barth",
     "url": "https://github.com/Farx1"
@@ -9,5 +9,6 @@
   "homepage": "https://github.com/Farx1/skill-forge",
   "repository": "https://github.com/Farx1/skill-forge",
   "license": "MIT",
-  "keywords": ["skill", "skills", "workflow", "checks", "recurring-tasks", "dashboard"]
+  "keywords": ["skill", "skills", "workflow", "checks", "recurring-tasks", "panel"],
+  "types": "./types/index.d.ts"
 }
