@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""playbook-forge : outil en ligne de commande (bibliothèque standard uniquement)."""
+"""skill-forge : outil en ligne de commande (bibliothèque standard uniquement)."""
 import argparse
 import difflib
 import json
@@ -16,7 +16,7 @@ from itertools import combinations
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-ASSETS = REPO / "skills" / "playbook" / "assets"
+ASSETS = REPO / "skills" / "forge" / "assets"
 PORTABLE = {"name", "description", "metadata", "license", "compatibility", "allowed-tools"}
 SECTIONS = [
     ("Objectif", "Purpose"), ("Quand l'utiliser", "When to use this"), ("Entrées", "Inputs"),
@@ -80,7 +80,7 @@ def valid_name(n):
 
 
 def cfg_file():
-    return config_dir() / "playbook-forge" / "config.json"
+    return config_dir() / "skill-forge" / "config.json"
 
 
 def enc_ok(p):
@@ -215,7 +215,7 @@ def discover():
             continue
         for d in sorted(root.iterdir()):
             fm = safe_fm(d / "SKILL.md") if (d / "SKILL.md").is_file() else None
-            if fm and isinstance(fm.get("metadata"), dict) and "playbook-forge" in fm["metadata"] \
+            if fm and isinstance(fm.get("metadata"), dict) and "skill-forge" in fm["metadata"] \
                     and d.resolve() not in seen:
                 seen.add(d.resolve())
                 out.append((scope, d))
@@ -230,7 +230,7 @@ def resolve_pb(arg):
         for _, r in roots():
             if (r / arg / "SKILL.md").is_file():
                 return (r / arg).resolve()
-    raise Usage(f"playbook introuvable : {arg}")
+    raise Usage(f"skill introuvable : {arg}")
 
 
 def last_activity(pb):
@@ -267,7 +267,7 @@ def validate_pb(pb):
     d = fm.get("description")
     add(isinstance(d, str) and 0 < len(d.strip()) <= 1024, "description", "description non vide, 1024 caractères max")
     meta = fm.get("metadata")
-    add(isinstance(meta, dict) and "playbook-forge" in meta, "metadata", "metadata.playbook-forge présent", "WARN")
+    add(isinstance(meta, dict) and "skill-forge" in meta, "metadata", "metadata.skill-forge présent", "WARN")
 
     secs = get_sections(body)
     missing = [SECTIONS[i][0] for i in range(9) if sec(secs, i) is None]
@@ -411,8 +411,8 @@ def build_data(pairs):
     passed, failed = sum(r["passed"] for r in recent), sum(r["failed"] for r in recent)
     for p in pbs:
         del p["runs"]
-    return {"generated": today(), "playbooks": pbs, "stats": {
-        "playbooks": len(pbs), "runs30": len(recent),
+    return {"generated": today(), "skills": pbs, "stats": {
+        "skills": len(pbs), "runs30": len(recent),
         "rate": round(100 * passed / (passed + failed)) if passed + failed else None,
         "alerts": sum(len(p["alerts"]) for p in pbs)}}
 
@@ -425,8 +425,8 @@ def render(data):
 def summary(data):
     s = data["stats"]
     rate = "n/a" if s["rate"] is None else f"{s['rate']} %"
-    L = [f"{s['playbooks']} playbook(s), {s['runs30']} run(s) sur 30 jours, checks réussis : {rate}, {s['alerts']} alerte(s)"]
-    for p in data["playbooks"]:
+    L = [f"{s['skills']} skill(s), {s['runs30']} run(s) sur 30 jours, checks réussis : {rate}, {s['alerts']} alerte(s)"]
+    for p in data["skills"]:
         ly = " ".join(f"{k}={v}" for k, v in p["layers"].items())
         L.append(f"- {p['name']} ({p['scope']}) | {ly} | alertes : {len(p['alerts'])}")
     return "\n".join(L)
@@ -437,7 +437,7 @@ HTML = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard playbook-forge</title>
+<title>Dashboard skill-forge</title>
 <style>
 :root{--bg:#f6f7f9;--fg:#1d2330;--card:#fff;--mut:#667085;--bd:#d9dde5;--ok:#1a7f4b;--mid:#b26a00;--ko:#c0392b;--acc:#2f5fd0}
 @media (prefers-color-scheme:dark){:root{--bg:#12151c;--fg:#e6e9f0;--card:#1b202b;--mut:#9aa3b5;--bd:#2c3342;--ok:#4cc38a;--mid:#e0a040;--ko:#ef6f60;--acc:#7ea2ff}}
@@ -471,10 +471,10 @@ footer{margin-top:1.5rem}
 </style>
 </head>
 <body>
-<h1>Dashboard des playbooks</h1>
+<h1>Dashboard des skills</h1>
 <section class="stats" id="stats"></section>
 <div class="bar">
-<input type="search" id="q" placeholder="Rechercher un playbook" aria-label="Rechercher un playbook">
+<input type="search" id="q" placeholder="Rechercher un skill" aria-label="Rechercher un skill">
 <label><input type="checkbox" id="onlyAl"> Avec alertes</label>
 </div>
 <main class="grid" id="grid"></main>
@@ -525,21 +525,21 @@ function card(p){
  return c}
 function stats(){
  var s=D.stats,el=document.getElementById('stats');
- [['Playbooks',s.playbooks],['Runs sur 30 jours',s.runs30],['Checks réussis',s.rate===null?'n/a':s.rate+' %'],['Alertes',s.alerts]].forEach(function(x){
+ [['Skills',s.skills],['Runs sur 30 jours',s.runs30],['Checks réussis',s.rate===null?'n/a':s.rate+' %'],['Alertes',s.alerts]].forEach(function(x){
   var b=h('div','stat');b.appendChild(h('b',null,String(x[1])));b.appendChild(h('span',null,x[0]));el.appendChild(b)})}
 function render(){
  var q=document.getElementById('q').value.toLowerCase(),only=document.getElementById('onlyAl').checked,g=document.getElementById('grid');
  g.textContent='';
  var n=0;
- D.playbooks.forEach(function(p){
+ D.skills.forEach(function(p){
   if(only&&!p.alerts.length)return;
   if(q&&(p.name+' '+p.scope).toLowerCase().indexOf(q)<0)return;
   g.appendChild(card(p));n++});
- if(!n)g.appendChild(h('div','muted','Aucun playbook ne correspond.'))}
+ if(!n)g.appendChild(h('div','muted','Aucun skill ne correspond.'))}
 stats();render();
 document.getElementById('q').addEventListener('input',render);
 document.getElementById('onlyAl').addEventListener('change',render);
-document.getElementById('foot').textContent='Généré le '+D.generated+' par playbook-forge';
+document.getElementById('foot').textContent='Généré le '+D.generated+' par skill-forge';
 })();
 </script>
 </body>
@@ -587,7 +587,7 @@ def export_zip(pb, out):
         raise Fail("clés non portables : " + ", ".join(extra))
     out = Path(out).resolve()
     if out == pb or pb in out.parents:
-        raise Fail(f"--out dans le dossier du playbook : {out}")
+        raise Fail(f"--out dans le dossier du skill : {out}")
     out.mkdir(parents=True, exist_ok=True)
     z = out / f"{pb.name}.zip"
     with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -616,7 +616,7 @@ def cmd_list(a):
     if a.json:
         print(json.dumps(rows, ensure_ascii=False, indent=2))
     elif not rows:
-        print("Aucun playbook trouvé.")
+        print("Aucun skill trouvé.")
     for r in ([] if a.json else rows):
         print(f"{r['name']} | {r['scope']} | {r['last_activity'] or 'jamais'} | {r['path']}")
     return 0
@@ -640,9 +640,9 @@ def cmd_scaffold(a):
     write(dest / "files" / "INDEX.md", read(tpl["INDEX.template.md"]))
     write(dest / "notes.md", read(tpl["notes.template.md"]))
     write(dest / "runs.jsonl", "")
-    print(f"OK playbook créé : {dest}")
+    print(f"OK skill créé : {dest}")
     if new_root:
-        print(f"NOTE : dossier skills créé ({root}). Redémarre Claude Code pour que le playbook soit détecté.")
+        print(f"NOTE : dossier skills créé ({root}). Redémarre Claude Code pour que le skill soit détecté.")
     return 0
 
 
@@ -696,7 +696,7 @@ def cmd_audit(a):
 
 def cmd_dashboard(a):
     data = build_data(discover())
-    out = Path(a.out) if a.out else config_dir() / "playbook-forge" / "dashboard.html"
+    out = Path(a.out) if a.out else config_dir() / "skill-forge" / "dashboard.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     write(out, render(data))
     print(summary(data))
@@ -783,7 +783,7 @@ def cmd_selftest(a):
 
 
 def build_parser():
-    ap = argparse.ArgumentParser(prog="pbf", description="playbook-forge")
+    ap = argparse.ArgumentParser(prog="forge", description="skill-forge")
     sp = ap.add_subparsers(dest="cmd", required=True)
 
     def cmd(name, fn):

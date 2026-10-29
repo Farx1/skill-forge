@@ -1,8 +1,8 @@
 ---
 name: relance-factures
-description: Relance les factures clients impayées à J+7, J+30 et J+60 après l'échéance, avec un email adapté au palier. Utilise ce playbook dès que je dis « relance les impayés », « relance la facture de [client] », « prépare les relances du mois », « qui n'a pas payé ? » ou « envoie un rappel de paiement ». Il choisit le palier selon l'ancienneté, retrouve le contact, applique le ton prévu et prépare un brouillon, sans jamais l'envoyer sans mon accord.
+description: Relance les factures clients impayées à J+7, J+30 et J+60 après l'échéance, avec un email adapté au palier. Utilise ce skill dès que je dis « relance les impayés », « relance la facture de [client] », « prépare les relances du mois », « qui n'a pas payé ? » ou « envoie un rappel de paiement ». Il choisit le palier selon l'ancienneté, retrouve le contact, applique le ton prévu et prépare un brouillon, sans jamais l'envoyer sans mon accord.
 metadata:
-  playbook-forge: "1"
+  skill-forge: "1"
   created: "2026-09-15"
 ---
 
@@ -77,5 +77,5 @@ Préparer pour chaque facture échue le brouillon d'email de relance du bon pali
 
 1. Exécuter le protocole de vérification de la Définition de terminé.
 2. Ajouter une ligne à `${CLAUDE_SKILL_DIR}/runs.jsonl` au format `{"type":"run","date":"AAAA-MM-JJ","passed":5,"failed":0,"unverified":1,"failed_checks":[],"note":"..."}`.
-3. Si je corrige le résultat, proposer `/playbook fix relance-factures`.
+3. Si je corrige le résultat, proposer `/forge fix relance-factures`.
 4. Si aucun outil d'écriture de fichiers n'est disponible (par exemple sur claude.ai), le dire, donner le texte complet du fichier modifié et son chemin exact, et rappeler de remplacer l'ancien upload au lieu d'en garder deux versions.

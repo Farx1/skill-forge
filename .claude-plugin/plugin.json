@@ -1,13 +1,13 @@
 {
-  "name": "playbook-forge",
+  "name": "skill-forge",
   "version": "0.1.0",
-  "description": "Transforme un job récurrent en playbook Claude Code : étapes, outils, checks et boucle de correction, avec dashboard local.",
+  "description": "Transforme un job récurrent en skill Claude Code : étapes, outils, checks et boucle de correction, avec dashboard local.",
   "author": {
     "name": "Jules Barth",
     "url": "https://github.com/Farx1"
   },
-  "homepage": "https://github.com/Farx1/playbook-forge",
-  "repository": "https://github.com/Farx1/playbook-forge",
+  "homepage": "https://github.com/Farx1/skill-forge",
+  "repository": "https://github.com/Farx1/skill-forge",
   "license": "MIT",
-  "keywords": ["playbook", "skills", "workflow", "checks", "recurring-tasks", "dashboard"]
+  "keywords": ["skill", "skills", "workflow", "checks", "recurring-tasks", "dashboard"]
 }

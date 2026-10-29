@@ -34,4 +34,4 @@ Sous les checks, ajoute un « Protocole de vérification » :
 
 ## 3. Valider
 
-Lance `pbf.py validate <nom>`. Il exige 5 à 10 checks contenant « Preuve » et « Échec si ». Corrige les FAIL, montre la section à l'utilisateur, intègre ses retours.
+Lance `forge.py validate <nom>`. Il exige 5 à 10 checks contenant « Preuve » et « Échec si ». Corrige les FAIL, montre la section à l'utilisateur, intègre ses retours.

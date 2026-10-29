@@ -23,7 +23,7 @@ Lis `notes.md`. S'il contient déjà une erreur similaire, la correction précé
 
 ## 5. Dater et rejouer
 
-1. Lance `pbf.py note <nom> --layer instructions|outils|checks --error "<erreur>" --fix "<correction>"`. Le script écrit la ligne datée, la plus récente en haut.
-2. Relance le job à froid avec l'agent `playbook-runner` (`playbook-forge:playbook-runner`), selon `${CLAUDE_SKILL_DIR}/references/test.md`, sur les mêmes entrées que l'erreur.
+1. Lance `forge.py note <nom> --layer instructions|outils|checks --error "<erreur>" --fix "<correction>"`. Le script écrit la ligne datée, la plus récente en haut.
+2. Relance le job à froid avec l'agent `skill-runner` (`skill-forge:skill-runner`), selon `${CLAUDE_SKILL_DIR}/references/test.md`, sur les mêmes entrées que l'erreur.
 3. Montre l'ancien et le nouveau résultat côte à côte.
 4. Si l'erreur persiste, la couche désignée était la mauvaise : recommence à l'étape 2.

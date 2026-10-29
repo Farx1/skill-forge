@@ -9,14 +9,14 @@ import zipfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-PBF = REPO / "scripts" / "pbf.py"
+FORGE = REPO / "scripts" / "forge.py"
 
 CHECKS = "\n".join(f"- [ ] verification {i} | Preuve : comptage {i} | Échec si : zéro" for i in range(5))
 VALID = f"""---
 name: @NAME@
-description: Fait la démo. Utilise ce playbook dès que je tape « lance la démo ».
+description: Fait la démo. Utilise ce skill dès que je tape « lance la démo ».
 metadata:
-  playbook-forge: "1"
+  skill-forge: "1"
   created: "2026-01-01"
 ---
 # Démo
@@ -67,8 +67,8 @@ class Base(unittest.TestCase):
     def tearDown(self):
         self._t.cleanup()
 
-    def run_pbf(self, *args):
-        p = subprocess.run([sys.executable, str(PBF), *args], cwd=self.proj, env=self.env,
+    def run_forge(self, *args):
+        p = subprocess.run([sys.executable, str(FORGE), *args], cwd=self.proj, env=self.env,
                            capture_output=True, encoding="utf-8")
         return p.returncode, p.stdout + p.stderr
 
@@ -87,9 +87,9 @@ class Base(unittest.TestCase):
         return d
 
 
-class TestPbf(Base):
+class TestForge(Base):
     def test_scaffold_creates_tree(self):
-        rc, out = self.run_pbf("scaffold", "mon-job", "--scope", "perso")
+        rc, out = self.run_forge("scaffold", "mon-job", "--scope", "perso")
         self.assertEqual(rc, 0, out)
         d = self.skills / "mon-job"
         for f in ("SKILL.md", "files/INDEX.md", "notes.md", "runs.jsonl"):
@@ -99,28 +99,28 @@ class TestPbf(Base):
         self.assertNotIn("[nom]", text)
         self.assertRegex(text, r'created: "\d{4}-\d{2}-\d{2}"')
         self.assertIn("redémarre", out.lower())
-        self.assertEqual(self.run_pbf("validate", "mon-job")[0], 0)
+        self.assertEqual(self.run_forge("validate", "mon-job")[0], 0)
 
     def test_scaffold_refuses_existing_and_bad_name(self):
-        self.assertEqual(self.run_pbf("scaffold", "mon-job", "--scope", "perso")[0], 0)
-        self.assertEqual(self.run_pbf("scaffold", "mon-job", "--scope", "perso")[0], 1)
+        self.assertEqual(self.run_forge("scaffold", "mon-job", "--scope", "perso")[0], 0)
+        self.assertEqual(self.run_forge("scaffold", "mon-job", "--scope", "perso")[0], 1)
         for bad in ("Mon_Job", "synced", "a" * 65):
-            self.assertEqual(self.run_pbf("scaffold", bad, "--scope", "perso")[0], 2, bad)
+            self.assertEqual(self.run_forge("scaffold", bad, "--scope", "perso")[0], 2, bad)
 
     def test_scaffold_projet_scope(self):
-        rc, out = self.run_pbf("scaffold", "p-job", "--scope", "projet")
+        rc, out = self.run_forge("scaffold", "p-job", "--scope", "projet")
         self.assertEqual(rc, 0, out)
         self.assertTrue((self.proj / ".claude" / "skills" / "p-job" / "SKILL.md").is_file())
 
     def test_validate_valid(self):
         d = self.make()
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertEqual(rc, 0, out)
         self.assertNotIn("FAIL", out)
 
     def test_validate_missing_section(self):
         d = self.make(skill=VALID.replace("## Cas particuliers", "## Autre"))
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertEqual(rc, 1)
         self.assertIn("Cas particuliers", out)
 
@@ -128,56 +128,56 @@ class TestPbf(Base):
         en = VALID
         for fr, e in (("Objectif", "Purpose"), ("Étapes", "Steps"), ("Décisions", "Decisions")):
             en = en.replace(f"## {fr}", f"## {e}")
-        self.assertEqual(self.run_pbf("validate", str(self.make(skill=en)))[0], 0)
+        self.assertEqual(self.run_forge("validate", str(self.make(skill=en)))[0], 0)
 
     def test_validate_unindexed_file(self):
         d = self.make()
         (d / "files" / "autre-outil.md").write_text("x\n", encoding="utf-8")
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertEqual(rc, 1)
         self.assertIn("autre-outil.md", out)
 
     def test_validate_secret(self):
         d = self.make()
         (d / "files" / "relance-template.md").write_text("api_key=abc123\n", encoding="utf-8")
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertEqual(rc, 1)
         self.assertIn("secret", out)
 
     def test_validate_invalid_name(self):
         d = self.make(skill=VALID.replace("name: @NAME@", "name: Demo_X"))
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertEqual(rc, 1)
         self.assertIn("FAIL nom", out)
 
     def test_validate_too_few_checks(self):
         d = self.make(skill=VALID.replace(CHECKS, "\n".join(CHECKS.split("\n")[:3])))
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertEqual(rc, 1)
         self.assertIn("FAIL checks", out)
 
     def test_index_adds_line(self):
         d = self.make()
         (d / "files" / "echelle.md").write_text("x\n", encoding="utf-8")
-        rc, out = self.run_pbf("index", str(d), "--file", "echelle.md", "--purpose", "niveaux", "--date", "2026-02-03")
+        rc, out = self.run_forge("index", str(d), "--file", "echelle.md", "--purpose", "niveaux", "--date", "2026-02-03")
         self.assertEqual(rc, 0, out)
         self.assertIn("- echelle.md | niveaux | 2026-02-03\n", (d / "files" / "INDEX.md").read_text(encoding="utf-8"))
-        self.assertEqual(self.run_pbf("validate", str(d))[0], 0)
+        self.assertEqual(self.run_forge("validate", str(d))[0], 0)
 
     def test_note_most_recent_on_top(self):
         d = self.make()
-        self.run_pbf("note", str(d), "--layer", "outils", "--error", "ancienne", "--fix", "f1", "--date", "2026-01-05")
-        self.run_pbf("note", str(d), "--layer", "checks", "--error", "récente", "--fix", "f2", "--date", "2026-02-05")
+        self.run_forge("note", str(d), "--layer", "outils", "--error", "ancienne", "--fix", "f1", "--date", "2026-01-05")
+        self.run_forge("note", str(d), "--layer", "checks", "--error", "récente", "--fix", "f2", "--date", "2026-02-05")
         lines = [l for l in (d / "notes.md").read_text(encoding="utf-8").split("\n") if l.startswith("- ")]
         self.assertEqual(lines, ["- 2026-02-05 | checks | récente | f2", "- 2026-01-05 | outils | ancienne | f1"])
-        self.assertEqual(self.run_pbf("validate", str(d))[0], 0)
+        self.assertEqual(self.run_forge("validate", str(d))[0], 0)
 
     def test_audit_repeated_error(self):
         d = self.make()
         for day in ("2026-01-05", "2026-02-05"):
-            self.run_pbf("note", str(d), "--layer", "instructions", "--error", "oubli de la TVA sur la facture",
+            self.run_forge("note", str(d), "--layer", "instructions", "--error", "oubli de la TVA sur la facture",
                          "--fix", "règle", "--date", day)
-        rc, out = self.run_pbf("audit", str(d), "--json")
+        rc, out = self.run_forge("audit", str(d), "--json")
         self.assertEqual(rc, 0, out)
         self.assertIn("erreur_repetee", [f["kind"] for f in json.loads(out)[0]["findings"]])
 
@@ -187,7 +187,7 @@ class TestPbf(Base):
         run = {"type": "run", "date": "2026-03-01", "passed": 4, "failed": 1, "unverified": 0,
                "failed_checks": ["verification 1"], "note": ""}
         (d / "runs.jsonl").write_text((json.dumps(run) + "\n") * 2, encoding="utf-8")
-        rc, out = self.run_pbf("audit", str(d), "--json")
+        rc, out = self.run_forge("audit", str(d), "--json")
         kinds = [f["kind"] for f in json.loads(out)[0]["findings"]]
         self.assertIn("non_cite", kinds)
         self.assertIn("check_echoue", kinds)
@@ -195,10 +195,10 @@ class TestPbf(Base):
 
     def test_dashboard_no_http_in_src_href(self):
         d = self.make()
-        self.run_pbf("note", str(d), "--layer", "outils", "--error", '<a href="http://x.test">piège</a>',
+        self.run_forge("note", str(d), "--layer", "outils", "--error", '<a href="http://x.test">piège</a>',
                      "--fix", "ok", "--date", "2026-02-05")
         out_file = self.tmp / "dash.html"
-        rc, out = self.run_pbf("dashboard", "--no-open", "--out", str(out_file))
+        rc, out = self.run_forge("dashboard", "--no-open", "--out", str(out_file))
         self.assertEqual(rc, 0, out)
         html = out_file.read_text(encoding="utf-8")
         self.assertIsNone(re.search(r"""(src|href)\s*=\s*["']?http""", html))
@@ -208,7 +208,7 @@ class TestPbf(Base):
     def test_export_contains_skill_under_name(self):
         d = self.make()
         outdir = self.tmp / "out"
-        rc, out = self.run_pbf("export", str(d), "--out", str(outdir))
+        rc, out = self.run_forge("export", str(d), "--out", str(outdir))
         self.assertEqual(rc, 0, out)
         names = zipfile.ZipFile(outdir / "demo.zip").namelist()
         self.assertIn("demo/SKILL.md", names)
@@ -217,19 +217,19 @@ class TestPbf(Base):
 
     def test_export_refuses_non_portable_keys(self):
         d = self.make(skill=VALID.replace("metadata:", "model: x\nmetadata:", 1))
-        self.assertEqual(self.run_pbf("export", str(d), "--out", str(self.tmp / "o"))[0], 1)
+        self.assertEqual(self.run_forge("export", str(d), "--out", str(self.tmp / "o"))[0], 1)
 
     def test_accents_roundtrip(self):
         d = self.make()
         err = "Échec à l'étape été : œuf ç ñ"
-        self.run_pbf("note", str(d), "--layer", "outils", "--error", err, "--fix", "corrigé", "--date", "2026-02-05")
+        self.run_forge("note", str(d), "--layer", "outils", "--error", err, "--fix", "corrigé", "--date", "2026-02-05")
         raw = (d / "notes.md").read_bytes()
         self.assertNotIn(b"\r\n", raw)
         self.assertIn(f"- 2026-02-05 | outils | {err} | corrigé".encode("utf-8"), raw)
         out_file = self.tmp / "dash.html"
-        self.run_pbf("dashboard", "--no-open", "--out", str(out_file))
+        self.run_forge("dashboard", "--no-open", "--out", str(out_file))
         self.assertIn(err, out_file.read_text(encoding="utf-8"))
-        rc, out = self.run_pbf("validate", str(d), "--json")
+        rc, out = self.run_forge("validate", str(d), "--json")
         self.assertEqual(rc, 0, out)
 
     def test_list_and_config_extra_root(self):
@@ -237,8 +237,8 @@ class TestPbf(Base):
         extra = self.tmp / "extra"
         (extra / "autre").mkdir(parents=True)
         (extra / "autre" / "SKILL.md").write_text(VALID.replace("@NAME@", "autre"), encoding="utf-8")
-        self.assertEqual(self.run_pbf("config", "--add-root", str(extra))[0], 0)
-        rc, out = self.run_pbf("list", "--json")
+        self.assertEqual(self.run_forge("config", "--add-root", str(extra))[0], 0)
+        rc, out = self.run_forge("list", "--json")
         self.assertEqual(rc, 0, out)
         self.assertEqual(sorted(r["name"] for r in json.loads(out)), ["autre", "demo"])
 
@@ -247,28 +247,28 @@ class TestPbf(Base):
         (d / "SKILL.md").write_bytes(VALID.replace("@NAME@", "demo").encode("latin-1", "replace"))
         (d / "SKILL.md").write_bytes((d / "SKILL.md").read_bytes() + "é".encode("latin-1"))
         out_file = self.tmp / "dash.html"
-        rc, out = self.run_pbf("dashboard", "--no-open", "--out", str(out_file))
+        rc, out = self.run_forge("dashboard", "--no-open", "--out", str(out_file))
         self.assertEqual(rc, 0, out)
         self.assertNotIn("Traceback", out)
         self.assertIn("UTF-8", out_file.read_text(encoding="utf-8"))
-        self.assertEqual(self.run_pbf("validate", str(d))[0], 1)
+        self.assertEqual(self.run_forge("validate", str(d))[0], 1)
 
     def test_citation_is_whole_word(self):
         d = self.make(skill=VALID.replace("relance-template.md", "data.md"))
         (d / "files" / "a.md").write_text("x\n", encoding="utf-8")
         (d / "files" / "data.md").write_text("x\n", encoding="utf-8")
         (d / "files" / "INDEX.md").write_text("- a.md | u | 2026-01-01\n- data.md | u | 2026-01-01\n", encoding="utf-8")
-        rc, out = self.run_pbf("validate", str(d))
+        rc, out = self.run_forge("validate", str(d))
         self.assertIn("non cités dans SKILL.md : a.md", out)
 
     def test_doctor(self):
-        rc, out = self.run_pbf("doctor")
+        rc, out = self.run_forge("doctor")
         self.assertEqual(rc, 0, out)
         self.assertIn("Python", out)
 
     @unittest.skipUnless((REPO / "examples" / "relance-factures" / "SKILL.md").is_file(), "démo absente")
     def test_selftest(self):
-        rc, out = self.run_pbf("selftest")
+        rc, out = self.run_forge("selftest")
         self.assertEqual(rc, 0, out)
         self.assertNotIn("FAIL", out)
 

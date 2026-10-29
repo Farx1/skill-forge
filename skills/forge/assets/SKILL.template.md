@@ -1,12 +1,12 @@
 ---
 name: [nom]
-description: "[Ce que fait le playbook, en une phrase. Utilise ce playbook dès que je dis « [phrase exacte 1] » ou « [phrase exacte 2] ».]"
+description: "[Ce que fait le skill, en une phrase. Utilise ce skill dès que je dis « [phrase exacte 1] » ou « [phrase exacte 2] ».]"
 metadata:
-  playbook-forge: "1"
+  skill-forge: "1"
   created: "[AAAA-MM-JJ]"
 ---
 
-# [Titre du playbook]
+# [Titre du skill]
 
 ## Objectif
 
@@ -14,7 +14,7 @@ metadata:
 
 ## Quand l'utiliser
 
-[Déclencheur, fréquence, et cas où ce playbook ne s'applique pas.]
+[Déclencheur, fréquence, et cas où ce skill ne s'applique pas.]
 
 ## Entrées
 
@@ -39,7 +39,7 @@ metadata:
 
 ## Définition de terminé
 
-[À compléter avec /playbook checks. Chaque check suit le format `- [ ] vérification | Preuve : type | Échec si : condition`, 5 à 10 checks.]
+[À compléter avec /forge checks. Chaque check suit le format `- [ ] vérification | Preuve : type | Échec si : condition`, 5 à 10 checks.]
 
 ## Cas particuliers
 
@@ -49,5 +49,5 @@ metadata:
 
 1. Exécuter le protocole de vérification de la section « Définition de terminé ».
 2. Ajouter une ligne à `${CLAUDE_SKILL_DIR}/runs.jsonl` au format `{"type":"run","date":"AAAA-MM-JJ","passed":5,"failed":0,"unverified":1,"failed_checks":[],"note":"..."}`.
-3. Si je corrige le résultat, proposer `/playbook fix [nom]`.
+3. Si je corrige le résultat, proposer `/forge fix [nom]`.
 4. Si aucun outil d'écriture de fichiers n'est disponible (par exemple sur claude.ai), le dire, donner le texte complet du fichier modifié et son chemin exact, et rappeler de remplacer l'ancien upload au lieu d'en garder deux versions.
