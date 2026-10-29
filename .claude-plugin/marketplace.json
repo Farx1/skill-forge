@@ -1,0 +1,16 @@
+{
+  "name": "playbook-forge",
+  "owner": {
+    "name": "Jules Barth",
+    "url": "https://github.com/Farx1"
+  },
+  "description": "Marketplace du plugin playbook-forge.",
+  "plugins": [
+    {
+      "name": "playbook-forge",
+      "source": "./",
+      "description": "Transforme un job récurrent en playbook Claude Code : étapes, outils, checks et boucle de correction.",
+      "version": "0.1.0"
+    }
+  ]
+}
