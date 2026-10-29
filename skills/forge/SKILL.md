@@ -35,7 +35,7 @@ Niveau 1, question « Que veux-tu faire ? » :
 - Créer un skill : mode `new`.
 - Améliorer un skill : niveau 2a.
 - Tester ou auditer : niveau 2b.
-- Voir le dashboard : mode `dashboard`.
+- Voir le panneau : mode `dashboard`.
 
 Niveau 2a, question « Quelle amélioration ? » :
 - Sauver un outil : mode `save`.
@@ -72,9 +72,8 @@ Suis ensuite ce fichier à la lettre. Les modes suivants n'ont pas de fichier.
 
 ## Mode dashboard
 
-1. Lance `forge.py dashboard` (ajoute `--no-open` si le navigateur ne doit pas s'ouvrir, `--out CHEMIN` pour choisir le fichier).
-2. Résume en 3 lignes les actions prioritaires : alertes validate en FAIL, audit dû, erreurs répétées, fichiers non cités, secrets possibles.
-3. Donne le chemin du HTML généré.
+1. Dis à l'utilisateur de taper `/skills-panel` : le panneau Skills s'ouvre à côté du chat. Le skill ne peut pas l'ouvrir lui-même.
+2. Lance `forge.py status` et résume en 3 lignes les actions prioritaires : alertes validate en FAIL, audit dû, erreurs répétées, fichiers non cités, secrets possibles.
 
 ## Mode export
 
@@ -88,7 +87,7 @@ Lance `forge.py list` et affiche le résultat tel quel. Ajoute `--json` seulemen
 
 ## Autres sous-commandes
 
-`doctor` (diagnostic Python et racines), `config --show` ou `config --add-root CHEMIN` (racines supplémentaires de skills), `validate <nom|chemin>`, `scaffold`, `index`, `note`, `audit` : elles sont utilisées par les références, pas directement par le menu.
+`doctor` (diagnostic Python et racines), `config --show` ou `config --add-root CHEMIN` (racines supplémentaires de skills), `status` (`--json` : données du panneau), `validate <nom|chemin>`, `scaffold`, `index`, `note`, `audit` : elles sont utilisées par les références, pas directement par le menu.
 
 ## Règles communes
 
